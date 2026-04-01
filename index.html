@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azhari Mobile Repairing</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a7c5c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Azhari Mobile">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4f8;--bg2:#ffffff;--bg3:#f5f7fa;--bg4:#e8edf2;
+  --accent:#0a7c5c;--accent2:#0066cc;
+  --text:#1a2332;--text2:#5a6a7a;--text3:#9aabb8;
+  --border:#dde3ea;--border2:#c8d0da;
+  --green:#0a7c5c;--red:#dc2626;--yellow:#d97706;--blue:#0066cc;--purple:#7c3aed;
+  --radius:12px;--radius2:8px;--radius3:20px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,.logo-name{font-family:'Syne',sans-serif}
+
+/* LOADING */
+#loading-screen{position:fixed;inset:0;background:var(--bg);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.loading-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent)} #loading-screen{background:#f0f4f8;}
+.loading-sub{font-size:13px;color:var(--text2)}
+.spinner{width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MPIN SCREEN */
+#mpin-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:24px}
+#mpin-screen.visible{display:flex}
+.mpin-logo .shop{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent);text-align:center}
+.mpin-logo .owner{font-size:13px;color:var(--text2);margin-top:4px;text-align:center}
+.mpin-title{font-size:15px;color:var(--text2)}
+.mpin-dots{display:flex;gap:14px}
+.mpin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);background:transparent;transition:all 0.2s}
+.mpin-dot.filled{background:var(--accent);border-color:var(--accent)}
+.mpin-keypad{display:grid;grid-template-columns:repeat(3,72px);gap:10px}
+.mpin-key{height:56px;border-radius:var(--radius2);border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-size:20px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:'Syne',sans-serif}
+.mpin-key:hover{background:var(--bg4);border-color:var(--accent)}
+.mpin-key:active{transform:scale(0.95)}
+.mpin-error{color:var(--red);font-size:13px;min-height:18px}
+
+/* LAYOUT */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.visible{display:flex}
+
+/* HEADER */
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo-name{font-size:17px;font-weight:800;color:var(--accent);letter-spacing:-0.3px}
+.logo-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.header-right{display:flex;align-items:center;gap:8px}
+.lock-btn{width:36px;height:36px;border-radius:var(--radius2);border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.lock-btn:hover{border-color:var(--accent);color:var(--accent)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.sync-dot.syncing{animation:pulse 1s infinite;background:var(--yellow)}
+.sync-dot.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* PAGE NAV */
+.page-header{padding:16px 20px 0;display:flex;align-items:center;gap:10px}
+.back-btn{width:34px;height:34px;border-radius:var(--radius2);border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.back-btn:hover{border-color:var(--accent);color:var(--accent)}
+.page-title-text{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text)}
+
+/* DASHBOARD */
+.dashboard{padding:20px}
+.dash-shop-card{background:linear-gradient(135deg,#e8f5ef 0%,#c8e6db 100%);border:1px solid var(--border2);border-radius:16px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden}
+.dash-shop-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(0,212,170,0.08)}
+.dash-shop-name{font-family:'Bebas Neue','Syne',sans-serif;font-size:28px;font-weight:400;color:#0a5c42;letter-spacing:1px;}
+.dash-owner{font-size:13px;color:var(--text2);margin-top:4px}
+.dash-address{font-size:12px;color:var(--text3);margin-top:2px}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dash-btn{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.dash-btn:hover{border-color:var(--accent);background:var(--bg3);transform:translateY(-1px)}
+.dash-btn:active{transform:scale(0.98)}
+.dash-btn-icon{font-size:22px}
+.dash-btn-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text)}
+.dash-btn-sub{font-size:11px;color:var(--text2)}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;flex:1}
+.screen.active{display:flex}
+.screen-body{flex:1;padding:16px 20px;overflow-y:auto;padding-bottom:40px}
+
+/* CATEGORY TABS */
+.cat-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{padding:7px 14px;border-radius:var(--radius3);border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all 0.15s}
+.cat-tab.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600}
+.cat-tab:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+
+/* SUB CATEGORY */
+.subcat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.subcat-btn{padding:10px 8px;border-radius:var(--radius2);border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:11px;cursor:pointer;transition:all 0.15s;text-align:center}
+.subcat-btn.active{border-color:var(--accent);background:rgba(0,212,170,0.1);color:var(--accent);font-weight:500}
+
+/* FORM */
+.form-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.form-row{margin-bottom:12px}
+.form-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:0.05em}
+.form-input{width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border 0.15s}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--text3)}
+select.form-input option{background:var(--bg3)}
+.form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-primary{width:100%;padding:13px;background:var(--accent);border:none;border-radius:var(--radius2);color:#000;font-size:14px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;transition:all 0.15s}
+.btn-primary:hover{background:#00b894}
+.btn-primary:active{transform:scale(0.98)}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+.btn-secondary{width:100%;padding:11px;background:transparent;border:1px solid var(--border2);border-radius:var(--radius2);color:var(--text2);font-size:13px;cursor:pointer;transition:all 0.15s}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:14px}
+.search-input{width:100%;padding:10px 12px 10px 36px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
+.search-input:focus{border-color:var(--accent)}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none}
+
+/* STOCK SELECT LIST */
+.stock-select-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;max-height:200px;overflow-y:auto}
+.stock-select-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:10px 12px;cursor:pointer;transition:all 0.15s;display:flex;justify-content:space-between;align-items:center}
+.stock-select-item:hover{border-color:var(--accent)}
+.stock-select-item.selected{border-color:var(--accent);background:rgba(0,212,170,0.08)}
+.stock-select-item .s-name{font-size:13px;font-weight:500;color:var(--text)}
+.stock-select-item .s-info{font-size:11px;color:var(--text2);margin-top:2px}
+.stock-select-item .s-qty{font-size:12px;font-weight:600;color:var(--accent)}
+
+/* LIST */
+.list-wrap{display:flex;flex-direction:column;gap:8px}
+.list-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.list-item-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px}
+.list-item-title{font-size:13px;font-weight:500;color:var(--text);flex:1}
+.list-item-badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.badge-green{background:rgba(10,124,92,0.1);color:#0a5c42}
+.badge-blue{background:rgba(0,102,204,0.1);color:#0055aa}
+.badge-yellow{background:rgba(217,119,6,0.1);color:#b45309}
+.badge-purple{background:rgba(124,58,237,0.1);color:#6d28d9}
+.badge-red{background:rgba(220,38,38,0.1);color:#b91c1c}
+.list-item-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.list-item-field{font-size:11px;color:var(--text2)}
+.list-item-field span{color:var(--text);font-weight:500}
+.list-item-total{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.total-label{font-size:11px;color:var(--text2)}
+.total-val{font-size:15px;font-weight:600;color:var(--accent);font-family:'Syne',sans-serif}
+.list-actions{display:flex;gap:6px;margin-top:8px}
+.action-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.action-btn.edit{color:var(--blue);border-color:rgba(0,153,255,0.3)}
+.action-btn.edit:hover{background:rgba(0,153,255,0.1)}
+.action-btn.del{color:var(--red);border-color:rgba(255,77,109,0.3)}
+.action-btn.del:hover{background:rgba(255,77,109,0.1)}
+.action-btn.view{color:var(--accent);border-color:rgba(0,212,170,0.3)}
+.action-btn.view:hover{background:rgba(0,212,170,0.1)}
+
+/* GRAND TOTAL */
+.grand-total-bar{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 16px;margin-top:14px}
+.gt-row{display:flex;justify-content:space-between;align-items:center}
+.gt-row+.gt-row{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.gt-label{font-size:12px;color:var(--text2)}
+.gt-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--accent)}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty-text{font-size:13px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 20px;font-size:13px;color:var(--text);z-index:9998;transition:transform 0.3s;white-space:nowrap;max-width:90vw}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--green);color:var(--green)}
+.toast.error{border-color:var(--red);color:var(--red)}
+
+/* THERMAL BILL MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:500px;max-height:88vh;overflow-y:auto;padding:20px}
+.modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;color:var(--text)}
+.modal-close{background:transparent;border:none;color:var(--text2);font-size:22px;cursor:pointer;line-height:1}
+.thermal-bill{background:#fff;color:#000;padding:16px;border-radius:8px;font-family:'Courier New',monospace;font-size:12px;line-height:1.7}
+.t-center{text-align:center}
+.t-bold{font-weight:700}
+.t-line{border-top:1px dashed #999;margin:8px 0}
+.t-row{display:flex;justify-content:space-between}
+.modal-actions{display:flex;gap:8px;margin-top:12px}
+.modal-actions button{flex:1;padding:11px;border-radius:var(--radius2);border:1px solid var(--border2);background:transparent;color:var(--text);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.modal-actions button:hover{border-color:var(--accent);color:var(--accent)}
+
+/* SETTINGS */
+.settings-section{margin-bottom:20px}
+.settings-title{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
+.settings-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.settings-row{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.settings-row:last-child{border-bottom:none}
+.settings-row-label{font-size:13px;color:var(--text)}
+.settings-row-val{font-size:12px;color:var(--text2);max-width:160px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.settings-edit-btn{padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--accent);font-size:11px;cursor:pointer;flex-shrink:0}
+
+/* CONFIRM & EDIT MODALS */
+.confirm-modal,.edit-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-modal.open,.edit-modal.open{display:flex}
+.confirm-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:100%;max-width:300px}
+.confirm-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.confirm-text{font-size:13px;color:var(--text2);margin-bottom:16px}
+.confirm-actions{display:flex;gap:8px}
+.confirm-actions button{flex:1;padding:10px;border-radius:var(--radius2);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-cancel{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-danger{background:var(--red);border:none;color:#fff;font-weight:600}
+.edit-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);width:100%;max-width:500px;padding:20px;max-height:88vh;overflow-y:auto}
+
+/* SECTION LABEL */
+.section-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loading-logo">Azhari Mobile</div>
+  <div class="spinner"></div>
+  <div class="loading-sub">Connecting to cloud...</div>
+</div>
+
+<!-- MPIN -->
+<div id="mpin-screen">
+  <div class="mpin-logo">
+    <div class="shop" id="mpin-shop-name">Azhari Mobile Repairing</div>
+    <div class="owner" id="mpin-owner">Arman</div>
+  </div>
+  <div class="mpin-title">Enter MPIN</div>
+  <div class="mpin-dots">
+    <div class="mpin-dot" id="d0"></div><div class="mpin-dot" id="d1"></div>
+    <div class="mpin-dot" id="d2"></div><div class="mpin-dot" id="d3"></div>
+  </div>
+  <div class="mpin-error" id="mpin-error"></div>
+  <div class="mpin-keypad">
+    <button class="mpin-key" onclick="mpinKey('1')">1</button>
+    <button class="mpin-key" onclick="mpinKey('2')">2</button>
+    <button class="mpin-key" onclick="mpinKey('3')">3</button>
+    <button class="mpin-key" onclick="mpinKey('4')">4</button>
+    <button class="mpin-key" onclick="mpinKey('5')">5</button>
+    <button class="mpin-key" onclick="mpinKey('6')">6</button>
+    <button class="mpin-key" onclick="mpinKey('7')">7</button>
+    <button class="mpin-key" onclick="mpinKey('8')">8</button>
+    <button class="mpin-key" onclick="mpinKey('9')">9</button>
+    <button class="mpin-key" onclick="mpinKey('C')" style="font-size:13px;">CLR</button>
+    <button class="mpin-key" onclick="mpinKey('0')">0</button>
+    <button class="mpin-key" onclick="mpinKey('DEL')" style="font-size:18px;">⌫</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="logo-name" id="header-shop-name">Azhari Mobile Repairing</div>
+      <div class="logo-sub" id="header-owner">Arman</div>
+    </div>
+    <div class="header-right">
+      <div class="sync-dot" id="sync-dot" title="Cloud sync"></div>
+      <button class="lock-btn" onclick="lockApp()">🔒</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="screen active" id="screen-dashboard">
+    <div class="screen-body dashboard">
+      <div class="dash-shop-card">
+        <div class="dash-shop-name" id="dash-shop-name">Azhari Mobile Repairing</div>
+        <div class="dash-owner" id="dash-owner">Arman</div>
+        <div class="dash-address" id="dash-address">Raniganj Tarbangla More 713347</div>
+      </div>
+      <div class="btn-grid">
+        <div class="dash-btn" onclick="goTo('add-stock')">
+          <div class="dash-btn-icon">📦</div>
+          <div class="dash-btn-label">Add Stock</div>
+          <div class="dash-btn-sub">Add inventory</div>
+        </div>
+        <div class="dash-btn" onclick="goTo('view-stock')">
+          <div class="dash-btn-icon">👁</div>
+          <div class="dash-btn-label">View Stock</div>
+          <div class="dash-btn-sub">See all items</div>
+        </div>
+        <div class="dash-btn" onclick="goTo('billing')">
+          <div class="dash-btn-icon">🧾</div>
+          <div class="dash-btn-label">Billing</div>
+          <div class="dash-btn-sub">Create bills</div>
+        </div>
+        <div class="dash-btn" onclick="goTo('report')">
+          <div class="dash-btn-icon">📊</div>
+          <div class="dash-btn-label">Report</div>
+          <div class="dash-btn-sub">Sales & profit</div>
+        </div>
+        <div class="dash-btn" onclick="goTo('expenses')">
+          <div class="dash-btn-icon">💸</div>
+          <div class="dash-btn-label">Shop Expenses</div>
+          <div class="dash-btn-sub">Track spending</div>
+        </div>
+        <div class="dash-btn" onclick="goTo('orders')">
+          <div class="dash-btn-icon">📋</div>
+          <div class="dash-btn-label">Customer Orders</div>
+          <div class="dash-btn-sub">Order tracking</div>
+        </div>
+        <div class="dash-btn" onclick="goTo('settings')" style="grid-column:span 2;">
+          <div class="dash-btn-icon">⚙️</div>
+          <div class="dash-btn-label">Settings</div>
+          <div class="dash-btn-sub">Shop info · MPIN · Thermal bill</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD STOCK -->
+  <div class="screen" id="screen-add-stock">
+    <div class="page-header"><button class="back-btn" onclick="goBack()">←</button><div class="page-title-text">Add Stock</div></div>
+    <div class="screen-body">
+      <div class="cat-tabs" id="add-cat-tabs">
+        <button class="cat-tab active" onclick="selectAddCat('running',this)">Running Item</button>
+        <button class="cat-tab" onclick="selectAddCat('accessories',this)">Accessories</button>
+        <button class="cat-tab" onclick="selectAddCat('spare',this)">Spare</button>
+        <button class="cat-tab" onclick="selectAddCat('ic',this)">IC</button>
+      </div>
+      <div class="section-label">Select Sub-Category</div>
+      <div class="subcat-grid" id="add-subcat-grid"></div>
+      <div class="form-card" id="add-stock-form"></div>
+      <button class="btn-primary" id="add-stock-btn" onclick="doSaveStock()">Save to Stock</button>
+    </div>
+  </div>
+
+  <!-- VIEW STOCK -->
+  <div class="screen" id="screen-view-stock">
+    <div class="page-header"><button class="back-btn" onclick="goBack()">←</button><div class="page-title-text">View Stock</div></div>
+    <div class="screen-body">
+      <div class="cat-tabs">
+        <button class="cat-tab active" onclick="filterViewStock('all',this)">All</button>
+        <button class="cat-tab" onclick="filterViewStock('running',this)">Running Item</button>
+        <button class="cat-tab" onclick="filterViewStock('accessories',this)">Accessories</button>
+        <button class="cat-tab" onclick="filterViewStock('spare',this)">Spare</button>
+        <button class="cat-tab" onclick="filterViewStock('ic',this)">IC</button>
+      </div>
+      <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="view-stock-search" placeholder="Search anything..." oninput="renderViewStock()"></div>
+      <div class="list-wrap" id="view-stock-list"></div>
+      <div class="grand-total-bar"><div class="gt-row"><div class="gt-label">Total Stock Value</div><div class="gt-val" id="view-stock-total">₹0</div></div></div>
+    </div>
+  </div>
+
+  <!-- BILLING -->
+  <div class="screen" id="screen-billing">
+    <div class="page-header"><button class="back-btn" onclick="goBack()">←</button><div class="page-title-text">Billing</div></div>
+    <div class="screen-body">
+      <div class="section-label">Step 1 — Select Category</div>
+      <div class="cat-tabs">
+        <button class="cat-tab active" onclick="selectBillCat('running',this)">Running Item</button>
+        <button class="cat-tab" onclick="selectBillCat('accessories',this)">Accessories</button>
+        <button class="cat-tab" onclick="selectBillCat('spare',this)">Spare</button>
+        <button class="cat-tab" onclick="selectBillCat('ic',this)">IC</button>
+        <button class="cat-tab" onclick="selectBillCat('manual',this)">Manual</button>
+      </div>
+      <div id="bill-stock-section"></div>
+      <div class="form-card" id="bill-form"></div>
+      <button class="btn-primary" id="bill-save-btn" onclick="doSaveBill()">Generate Bill</button>
+    </div>
+  </div>
+
+  <!-- REPORT -->
+  <div class="screen" id="screen-report">
+    <div class="page-header"><button class="back-btn" onclick="goBack()">←</button><div class="page-title-text">Report</div></div>
+    <div class="screen-body">
+      <div class="cat-tabs">
+        <button class="cat-tab active" onclick="filterReport('all',this)">All</button>
+        <button class="cat-tab" onclick="filterReport('running',this)">Running Item</button>
+        <button class="cat-tab" onclick="filterReport('accessories',this)">Accessories</button>
+        <button class="cat-tab" onclick="filterReport('spare',this)">Spare</button>
+        <button class="cat-tab" onclick="filterReport('ic',this)">IC</button>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px;">
+        <div class="section-label" style="margin-bottom:10px;">Date Range Filter</div>
+        <div class="form-grid2">
+          <div class="form-row"><label class="form-label">From Date</label><input class="form-input" type="date" id="report-from-date" oninput="renderReport()"></div>
+          <div class="form-row"><label class="form-label">To Date</label><input class="form-input" type="date" id="report-to-date" oninput="renderReport()"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button class="btn-secondary" style="flex:1;padding:8px;" onclick="clearDateFilter()">Clear Filter</button>
+          <button class="btn-primary" style="flex:1;padding:8px;font-size:13px;" onclick="generateStatement()">📄 Generate Statement</button>
+        </div>
+      </div>
+      <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="report-search" placeholder="Search bills..." oninput="renderReport()"></div>
+      <div class="list-wrap" id="report-list"></div>
+      <div class="grand-total-bar">
+        <div class="gt-row"><div class="gt-label">Total Sale</div><div class="gt-val" id="report-total-sale">₹0</div></div>
+        <div class="gt-row"><div class="gt-label">Total Profit</div><div class="gt-val" id="report-total-profit" style="color:var(--green)">₹0</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPENSES -->
+  <div class="screen" id="screen-expenses">
+    <div class="page-header"><button class="back-btn" onclick="goBack()">←</button><div class="page-title-text">Shop Expenses</div></div>
+    <div class="screen-body">
+      <div class="form-card">
+        <div class="form-row"><label class="form-label">Date</label><input class="form-input" type="date" id="exp-date"></div>
+        <div class="form-row"><label class="form-label">Purpose</label><input class="form-input" id="exp-purpose" placeholder="e.g. Rent, Tools..."></div>
+        <div class="form-row"><label class="form-label">Cost (₹)</label><input class="form-input" type="number" id="exp-cost" placeholder="0"></div>
+        <div class="form-row"><label class="form-label">Payer Name</label><input class="form-input" id="exp-payer" placeholder="Who paid?"></div>
+        <div class="form-row"><label class="form-label">Notes</label><input class="form-input" id="exp-notes" placeholder="Optional..."></div>
+        <button class="btn-primary" onclick="doSaveExpense()">Save Expense</button>
+      </div>
+      <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="exp-search" placeholder="Search expenses..." oninput="renderExpenses()"></div>
+      <div class="list-wrap" id="exp-list"></div>
+      <div class="grand-total-bar"><div class="gt-row"><div class="gt-label">Total Expenses</div><div class="gt-val" id="exp-total" style="color:var(--red)">₹0</div></div></div>
+    </div>
+  </div>
+
+  <!-- ORDERS -->
+  <div class="screen" id="screen-orders">
+    <div class="page-header"><button class="back-btn" onclick="goBack()">←</button><div class="page-title-text">Customer Orders</div></div>
+    <div class="screen-body">
+      <div class="form-card">
+        <div class="form-grid2">
+          <div class="form-row"><label class="form-label">Date</label><input class="form-input" type="date" id="ord-date"></div>
+          <div class="form-row"><label class="form-label">Customer Name</label><input class="form-input" id="ord-name" placeholder="Name"></div>
+          <div class="form-row"><label class="form-label">Phone Number</label><input class="form-input" id="ord-phone" placeholder="Number"></div>
+          <div class="form-row"><label class="form-label">Needs / Item</label><input class="form-input" id="ord-needs" placeholder="What they need"></div>
+          <div class="form-row"><label class="form-label">Quantity</label><input class="form-input" type="number" id="ord-qty" placeholder="0"></div>
+          <div class="form-row"><label class="form-label">Rate (₹)</label><input class="form-input" type="number" id="ord-rate" placeholder="0"></div>
+          <div class="form-row"><label class="form-label">Estimate (₹)</label><input class="form-input" type="number" id="ord-estimate" placeholder="0"></div>
+          <div class="form-row"><label class="form-label">Delivery Date</label><input class="form-input" type="date" id="ord-delivery"></div>
+        </div>
+        <div class="form-row"><label class="form-label">Notes</label><input class="form-input" id="ord-notes" placeholder="Optional..."></div>
+        <button class="btn-primary" onclick="doSaveOrder()">Save Order</button>
+      </div>
+      <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="ord-search" placeholder="Search orders..." oninput="renderOrders()"></div>
+      <div class="list-wrap" id="ord-list"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="screen-settings">
+    <div class="page-header"><button class="back-btn" onclick="goBack()">←</button><div class="page-title-text">Settings</div></div>
+    <div class="screen-body">
+      <div class="settings-section">
+        <div class="settings-title">Shop Information</div>
+        <div class="settings-card">
+          <div class="settings-row"><div><div class="settings-row-label">Shop Name</div><div class="settings-row-val" id="set-shopName">Azhari Mobile Repairing</div></div><button class="settings-edit-btn" onclick="editSetting('shopName','Shop Name')">Edit</button></div>
+          <div class="settings-row"><div><div class="settings-row-label">Owner Name</div><div class="settings-row-val" id="set-ownerName">Arman</div></div><button class="settings-edit-btn" onclick="editSetting('ownerName','Owner Name')">Edit</button></div>
+          <div class="settings-row"><div><div class="settings-row-label">Address</div><div class="settings-row-val" id="set-address">Raniganj Tarbangla More 713347</div></div><button class="settings-edit-btn" onclick="editSetting('address','Address')">Edit</button></div>
+          <div class="settings-row"><div><div class="settings-row-label">Phone</div><div class="settings-row-val" id="set-phone">93825 29433</div></div><button class="settings-edit-btn" onclick="editSetting('phone','Phone')">Edit</button></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Thermal Bill</div>
+        <div class="settings-card">
+          <div class="settings-row"><div><div class="settings-row-label">Bill Shop Name</div><div class="settings-row-val" id="set-billName">Azhari Mobile Repairing</div></div><button class="settings-edit-btn" onclick="editSetting('billName','Bill Shop Name')">Edit</button></div>
+          <div class="settings-row"><div><div class="settings-row-label">Bill Address</div><div class="settings-row-val" id="set-billAddress">Raniganj Tarbangla More 713347</div></div><button class="settings-edit-btn" onclick="editSetting('billAddress','Bill Address')">Edit</button></div>
+          <div class="settings-row"><div><div class="settings-row-label">Bill Phone</div><div class="settings-row-val" id="set-billPhone">93825 29433</div></div><button class="settings-edit-btn" onclick="editSetting('billPhone','Bill Phone')">Edit</button></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Security</div>
+        <div class="settings-card">
+          <div class="settings-row"><div><div class="settings-row-label">MPIN</div><div class="settings-row-val">4-digit PIN</div></div><button class="settings-edit-btn" onclick="openChangeMpin()">Change</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THERMAL BILL MODAL -->
+<div class="modal-overlay" id="bill-modal">
+  <div class="modal-box">
+    <div class="modal-title">Thermal Bill <button class="modal-close" onclick="closeModal('bill-modal')">×</button></div>
+    <div class="thermal-bill" id="thermal-content"></div>
+    <div class="modal-actions">
+      <button onclick="printBill()">🖨 Print</button>
+      <button onclick="downloadBill()">⬇ Save</button>
+      <button onclick="shareBill()">📤 Share</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-modal" id="confirm-modal">
+  <div class="confirm-box">
+    <div class="confirm-title">Confirm Delete</div>
+    <div class="confirm-text" id="confirm-text">This will permanently delete this record.</div>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="edit-modal" id="edit-modal">
+  <div class="edit-box">
+    <div class="modal-title"><span id="edit-modal-title">Edit</span><button class="modal-close" onclick="closeEditModal()">×</button></div>
+    <div id="edit-modal-body"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-primary" onclick="doSaveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDcLasToMpo2h2L-ccpVtO_fKQMAiyJe7U",
+  authDomain: "azharmobile-fbe61.firebaseapp.com",
+  projectId: "azharmobile-fbe61",
+  storageBucket: "azharmobile-fbe61.firebasestorage.app",
+  messagingSenderId: "311205979593",
+  appId: "1:311205979593:web:0c33ea992f43a57bf63418"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+// ── helpers ──
+const syncDot = ()=>document.getElementById('sync-dot');
+function setSyncing(){ syncDot().className='sync-dot syncing'; }
+function setSynced(){ syncDot().className='sync-dot'; }
+function setSyncError(){ syncDot().className='sync-dot error'; }
+
+// ── in-memory ──
+let stockData=[], billsData=[], expensesData=[], ordersData=[];
+let settings={shopName:'Azhari Mobile Repairing',ownerName:'Arman',address:'Raniganj Tarbangla More 713347',phone:'93825 29433',billName:'Azhari Mobile Repairing',billAddress:'Raniganj Tarbangla More 713347',billPhone:'93825 29433'};
+let mpin='1234';
+
+// ── FIRESTORE listeners ──
+function listenCol(colName, setter, onReady){
+  return onSnapshot(collection(db, colName), snap=>{
+    setter(snap.docs.map(d=>({...d.data(),_id:d.id})));
+    onReady && onReady();
+    setSynced();
+  }, ()=>setSyncError());
+}
+
+let settingsLoaded=false;
+async function loadSettings(){
+  try{
+    const snap = await getDoc(doc(db,'config','settings'));
+    if(snap.exists()){ settings={...settings,...snap.data()}; }
+    const mpinSnap = await getDoc(doc(db,'config','mpin'));
+    if(mpinSnap.exists()){ mpin=mpinSnap.data().value||'1234'; }
+  }catch(e){}
+  settingsLoaded=true;
+  updateSettingsUI();
+}
+
+async function saveSettingsToDb(){
+  setSyncing();
+  try{ await setDoc(doc(db,'config','settings'),settings); setSynced(); }catch(e){ setSyncError(); }
+}
+async function saveMpinToDb(){
+  setSyncing();
+  try{ await setDoc(doc(db,'config','mpin'),{value:mpin}); setSynced(); }catch(e){ setSyncError(); }
+}
+
+async function addDoc2(colName, id, data){
+  setSyncing();
+  try{ await setDoc(doc(db,colName,String(id)),data); setSynced(); return true; }
+  catch(e){ setSyncError(); showToast('Sync error!','error'); return false; }
+}
+async function delDoc(colName, id){
+  setSyncing();
+  try{ await deleteDoc(doc(db,colName,String(id))); setSynced(); return true; }
+  catch(e){ setSyncError(); return false; }
+}
+async function updDoc(colName, id, data){
+  setSyncing();
+  try{ await updateDoc(doc(db,colName,String(id)),data); setSynced(); return true; }
+  catch(e){ setSyncError(); return false; }
+}
+
+// expose to window
+window._db={addDoc2,delDoc,updDoc,saveSettingsToDb,saveMpinToDb,db};
+window._data={get stock(){return stockData;},get bills(){return billsData;},get expenses(){return expensesData;},get orders(){return ordersData;},get settings(){return settings;},get mpin(){return mpin;},setMpin(v){mpin=v;},setSettings(k,v){settings[k]=v;}};
+
+// start listeners
+Promise.all([
+  new Promise(r=>listenCol('stock',d=>{stockData=d;},r)),
+  new Promise(r=>listenCol('bills',d=>{billsData=d;},r)),
+  new Promise(r=>listenCol('expenses',d=>{expensesData=d;},r)),
+  new Promise(r=>listenCol('orders',d=>{ordersData=d;},r)),
+  loadSettings()
+]).then(()=>{
+  document.getElementById('loading-screen').style.display='none';
+  document.getElementById('mpin-screen').classList.add('visible');
+  updateMpinNames();
+});
+
+// re-render on live updates
+onSnapshot(collection(db,'stock'),()=>{ if(window._currentScreen==='view-stock') renderViewStock(); if(window._currentScreen==='billing') renderBillStockSection(); });
+onSnapshot(collection(db,'bills'),()=>{ if(window._currentScreen==='report') renderReport(); });
+onSnapshot(collection(db,'expenses'),()=>{ if(window._currentScreen==='expenses') renderExpenses(); });
+onSnapshot(collection(db,'orders'),()=>{ if(window._currentScreen==='orders') renderOrders(); });
+
+</script>
+
+<script>
+// ── CATS CONFIG ──
+const cats={
+  running:{label:'Running Item',subs:['Glass','Back Cover','UV Glass'],color:'badge-green',
+    fields:['date','item_name','supported_model','rate','quantity','supplier_name','buyer_name','item_location']},
+  accessories:{label:'Accessories',subs:['Charger','Cable','Power Bank','Neckband','Airpods','Headphone','Other'],color:'badge-blue',
+    fields:['date','item_name','rate','quantity','item_location','supplier_name','buyer_name']},
+  spare:{label:'Spare',subs:['Display','OCA Glass','Back Panel','Battery','CC Pin','CC Board','Antina Wire','Flex Cable','Ringer','Reciver','Dead Phone'],color:'badge-yellow',
+    fields:['date','spare_name','supported','rate','quantity','spare_location','supplier_name','buyer_name']},
+  ic:{label:'IC',subs:['Power IC','Charging IC','Network IC','CPU','EMMC','UFS','Other'],color:'badge-purple',
+    fields:['date','ic_no','support','rate','quantity','ic_location','supplier_name','buyer_name']}
+};
+const fLabels={date:'Date',item_name:'Item Name',supported_model:'Supported Model',rate:'Rate (₹)',quantity:'Quantity',supplier_name:'Supplier Name',buyer_name:'Buyer Name',item_location:'Item Location',spare_name:'Spare Name',supported:'Supported',spare_location:'Spare Location',ic_no:'IC No.',support:'Support',ic_location:'IC Location'};
+
+function nameKey(cat){ return cat==='spare'?'spare_name':cat==='ic'?'ic_no':'item_name'; }
+
+window._currentScreen='dashboard';
+
+// ── MPIN ──
+let mpinInput='';
+function updateMpinNames(){
+  const s=window._data?window._data.settings:{};
+  const el1=document.getElementById('mpin-shop-name'); if(el1) el1.textContent=s.shopName||'Azhari Mobile Repairing';
+  const el2=document.getElementById('mpin-owner'); if(el2) el2.textContent=s.ownerName||'Arman';
+}
+function mpinKey(k){
+  if(k==='C'){mpinInput='';}
+  else if(k==='DEL'){mpinInput=mpinInput.slice(0,-1);}
+  else if(mpinInput.length<4){mpinInput+=k;}
+  for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled',i<mpinInput.length);
+  if(mpinInput.length===4) setTimeout(checkMpin,120);
+}
+function checkMpin(){
+  if(mpinInput===(window._data?window._data.mpin:'1234')){
+    document.getElementById('mpin-screen').classList.remove('visible');
+    document.getElementById('app').classList.add('visible');
+    updateSettingsUI();
+  } else {
+    document.getElementById('mpin-error').textContent='Wrong MPIN. Try again.';
+    mpinInput='';
+    for(let i=0;i<4;i++) document.getElementById('d'+i).classList.remove('filled');
+    setTimeout(()=>document.getElementById('mpin-error').textContent='',2000);
+  }
+}
+function lockApp(){
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('mpin-screen').classList.add('visible');
+  mpinInput='';
+  for(let i=0;i<4;i++) document.getElementById('d'+i).classList.remove('filled');
+}
+
+// ── NAVIGATION ──
+function goTo(screen){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  window._currentScreen=screen;
+  const today=new Date().toISOString().split('T')[0];
+  if(screen==='add-stock') initAddStock();
+  if(screen==='view-stock') renderViewStock();
+  if(screen==='billing') initBilling();
+  if(screen==='report') renderReport();
+  if(screen==='expenses'){renderExpenses(); const el=document.getElementById('exp-date');if(el&&!el.value)el.value=today;}
+  if(screen==='orders'){renderOrders(); const el=document.getElementById('ord-date');if(el&&!el.value)el.value=today;}
+}
+function goBack(){ goTo('dashboard'); }
+
+// ── ADD STOCK ──
+let addCat='running', addSub='';
+function initAddStock(){ selectAddCat('running',document.querySelector('#screen-add-stock .cat-tab')); }
+function selectAddCat(cat,el){
+  addCat=cat;
+  document.querySelectorAll('#screen-add-stock .cat-tab').forEach(t=>t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const subs=cats[cat].subs; addSub=subs[0];
+  document.getElementById('add-subcat-grid').innerHTML=subs.map((s,i)=>`<button class="subcat-btn${i===0?' active':''}" onclick="selectAddSub('${s}',this)">${s}</button>`).join('');
+  renderAddForm();
+}
+function selectAddSub(sub,el){
+  addSub=sub;
+  document.querySelectorAll('#add-subcat-grid .subcat-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+function renderAddForm(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('add-stock-form').innerHTML=cats[addCat].fields.map(f=>`
+    <div class="form-row"><label class="form-label">${fLabels[f]}</label>
+    <input class="form-input" id="as-${f}" type="${f==='date'?'date':['rate','quantity'].includes(f)?'number':'text'}" placeholder="${fLabels[f]}" ${f==='date'?`value="${today}"`:''}></div>`).join('');
+}
+async function doSaveStock(){
+  const fields=cats[addCat].fields;
+  const obj={cat:addCat,sub:addSub};
+  for(const f of fields){ const el=document.getElementById('as-'+f); if(el) obj[f]=el.value; }
+  if(!obj.rate||!obj.quantity){showToast('Rate and Quantity required!','error');return;}
+  obj.rate=parseFloat(obj.rate); obj.quantity=parseFloat(obj.quantity);
+  const id=Date.now().toString();
+  const btn=document.getElementById('add-stock-btn'); btn.disabled=true; btn.textContent='Saving...';
+  const ok=await window._db.addDoc2('stock',id,obj);
+  btn.disabled=false; btn.textContent='Save to Stock';
+  if(ok){ showToast('Stock saved!','success'); initAddStock(); }
+}
+
+// ── VIEW STOCK ──
+let viewFilter='all';
+function filterViewStock(cat,el){
+  viewFilter=cat;
+  document.querySelectorAll('#screen-view-stock .cat-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderViewStock();
+}
+function renderViewStock(){
+  const q=(document.getElementById('view-stock-search')||{}).value||'';
+  let data=window._data.stock;
+  if(viewFilter!=='all') data=data.filter(d=>d.cat===viewFilter);
+  if(q) data=data.filter(d=>JSON.stringify(d).toLowerCase().includes(q.toLowerCase()));
+  const list=document.getElementById('view-stock-list');
+  if(!data.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">No stock found</div></div>';document.getElementById('view-stock-total').textContent='₹0';return;}
+  let total=0;
+  list.innerHTML=data.map(d=>{
+    const t=(parseFloat(d.rate)||0)*(parseFloat(d.quantity)||0); total+=t;
+    const nk=nameKey(d.cat);
+    return`<div class="list-item">
+      <div class="list-item-header"><div class="list-item-title">${d[nk]||'—'}</div><span class="list-item-badge ${cats[d.cat]?.color||''}">${d.sub}</span></div>
+      <div class="list-item-grid">
+        <div class="list-item-field">Date: <span>${d.date||'—'}</span></div>
+        <div class="list-item-field">Rate: <span>₹${d.rate||0}</span></div>
+        <div class="list-item-field">Qty: <span>${d.quantity||0}</span></div>
+        <div class="list-item-field">Supplier: <span>${d.supplier_name||'—'}</span></div>
+        ${d.supported_model?`<div class="list-item-field">Model: <span>${d.supported_model}</span></div>`:''}
+        ${d.supported?`<div class="list-item-field">Supported: <span>${d.supported}</span></div>`:''}
+        ${d.item_location||d.spare_location||d.ic_location?`<div class="list-item-field">Location: <span>${d.item_location||d.spare_location||d.ic_location}</span></div>`:''}
+      </div>
+      <div class="list-item-total"><div class="total-label">Rate × Qty</div><div class="total-val">₹${t.toLocaleString('en-IN')}</div></div>
+      <div class="list-actions">
+        <button class="action-btn edit" onclick="openEditStock('${d._id}')">Edit</button>
+        <button class="action-btn del" onclick="askDelete('stock','${d._id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('view-stock-total').textContent='₹'+total.toLocaleString('en-IN');
+}
+
+// ── BILLING ──
+let billCat='running', selectedStockId=null;
+function initBilling(){
+  billCat='running';
+  selectedStockId=null;
+  document.querySelectorAll('#screen-billing .cat-tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  renderBillStockSection();
+  renderBillForm();
+}
+function selectBillCat(cat,el){
+  billCat=cat; selectedStockId=null;
+  document.querySelectorAll('#screen-billing .cat-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderBillStockSection();
+  renderBillForm();
+}
+function renderBillStockSection(){
+  const sec=document.getElementById('bill-stock-section');
+  if(billCat==='manual'){sec.innerHTML='';return;}
+  const allItems=window._data.stock.filter(d=>d.cat===billCat);
+  if(!allItems.length){sec.innerHTML=`<div style="font-size:12px;color:var(--text3);padding:6px 0 12px;">No stock in this category.</div>`;return;}
+  const nk=nameKey(billCat);
+  const q=(document.getElementById('bill-stock-search')||{}).value||'';
+  const items=q?allItems.filter(d=>JSON.stringify(d).toLowerCase().includes(q.toLowerCase())):allItems;
+
+  // Only update list - search box ko re-render mat karo
+  let listEl=document.getElementById('bill-stock-list');
+  if(!listEl){
+    // First time - full render
+    sec.innerHTML=`<div class="section-label">Step 2 — Select Item from Stock</div>
+      <div class="search-wrap" style="margin-bottom:8px;">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="bill-stock-search" placeholder="Search item name, model..." oninput="updateBillStockList()">
+      </div>
+      <div class="stock-select-list" id="bill-stock-list"></div>
+      <div class="section-label" style="margin-top:4px;">Step 3 — Fill Bill Details</div>`;
+    listEl=document.getElementById('bill-stock-list');
+  }
+
+  // Only update the list items - search box untouched!
+  listEl.innerHTML=items.length?items.map(d=>`<div class="stock-select-item${selectedStockId===d._id?' selected':''}" onclick="selectStockItem('${d._id}')">
+      <div><div class="s-name">${d[nk]||'—'} <span style="font-size:10px;color:var(--text3);">(${d.sub})</span></div>
+      <div class="s-info">${d.supported_model||d.supported||''} ${d.item_location||d.spare_location||d.ic_location?'· '+(d.item_location||d.spare_location||d.ic_location):''}</div></div>
+      <div style="text-align:right"><div class="s-qty">Qty: ${d.quantity}</div></div>
+    </div>`).join(''):'<div style="font-size:12px;color:var(--text3);padding:8px 0;">No items found.</div>';
+}
+
+function updateBillStockList(){
+  // Called by search input - just update list without touching search box
+  renderBillStockSection();
+}
+function selectStockItem(id){
+  selectedStockId=id;
+  const item=window._data.stock.find(d=>d._id===id);
+  if(!item) return;
+  renderBillStockSection();
+  // only prefill item name, NOT price — user will enter sale price themselves
+  const nk=nameKey(item.cat);
+  setTimeout(()=>{
+    const nameEl=document.getElementById('bill-name'); if(nameEl) nameEl.value=item[nk]||'';
+    // sale price intentionally left blank
+  },50);
+}
+function renderBillForm(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('bill-form').innerHTML=`
+    <div class="form-row"><label class="form-label">Date</label><input class="form-input" type="date" id="bill-date" value="${today}"></div>
+    <div class="form-grid2">
+      <div class="form-row"><label class="form-label">Customer Name</label><input class="form-input" id="bill-customer" placeholder="Customer ka naam"></div>
+      <div class="form-row"><label class="form-label">Customer Phone</label><input class="form-input" id="bill-customer-phone" placeholder="Number (optional)"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Item Name</label><input class="form-input" id="bill-name" placeholder="Item name"></div>
+    <div class="form-grid2">
+      <div class="form-row"><label class="form-label">Sale Price (₹)</label><input class="form-input" type="number" id="bill-sale-price" placeholder="Aap khud dalo"></div>
+      <div class="form-row"><label class="form-label">Quantity</label><input class="form-input" type="number" id="bill-qty" placeholder="0"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Seller Name</label><input class="form-input" id="bill-seller" placeholder="Aapka naam"></div>
+    <div class="form-row"><label class="form-label">Notes</label><input class="form-input" id="bill-notes" placeholder="Optional..."></div>`;
+}
+async function doSaveBill(){
+  const date=document.getElementById('bill-date').value;
+  const customer=document.getElementById('bill-customer').value;
+  const customerPhone=document.getElementById('bill-customer-phone').value;
+  const name=document.getElementById('bill-name').value;
+  const salePrice=parseFloat(document.getElementById('bill-sale-price').value)||0;
+  const qty=parseFloat(document.getElementById('bill-qty').value)||0;
+  const seller=document.getElementById('bill-seller').value;
+  const notes=document.getElementById('bill-notes').value;
+  if(!name||!salePrice||!qty){showToast('Item name, Sale Price aur Qty zaroori hai!','error');return;}
+
+  // must select from stock if not manual
+  if(billCat!=='manual' && !selectedStockId){showToast('Pehle stock se item select karo!','error');return;}
+
+  let costRate=0;
+  if(selectedStockId){
+    const sItem=window._data.stock.find(d=>d._id===selectedStockId);
+    if(sItem){
+      if((parseFloat(sItem.quantity)||0)<qty){showToast('Stock kam hai! Available: '+sItem.quantity,'error');return;}
+      costRate=parseFloat(sItem.rate)||0;
+      await window._db.updDoc('stock',selectedStockId,{quantity: (parseFloat(sItem.quantity)||0)-qty });
+    }
+  }
+
+  const id=Date.now().toString();
+  const bill={cat:billCat,name,date,customer:customer||'',customerPhone:customerPhone||'',salePrice,qty,seller,notes,costRate,stockId:selectedStockId||null};
+  const btn=document.getElementById('bill-save-btn'); btn.disabled=true; btn.textContent='Saving...';
+  const ok=await window._db.addDoc2('bills',id,bill);
+  btn.disabled=false; btn.textContent='Generate Bill';
+  if(ok){
+    showToast('Bill saved!','success');
+    showBillModal({...bill,_id:id});
+    selectedStockId=null;
+    initBilling();
+  }
+}
+
+// ── REPORT ──
+let reportFilter='all';
+function filterReport(cat,el){
+  reportFilter=cat;
+  document.querySelectorAll('#screen-report .cat-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderReport();
+}
+function clearDateFilter(){
+  const f=document.getElementById('report-from-date'); if(f) f.value='';
+  const t=document.getElementById('report-to-date'); if(t) t.value='';
+  renderReport();
+}
+function getFilteredReportData(){
+  const q=(document.getElementById('report-search')||{}).value||'';
+  const fromDate=(document.getElementById('report-from-date')||{}).value||'';
+  const toDate=(document.getElementById('report-to-date')||{}).value||'';
+  let data=window._data.bills;
+  if(reportFilter!=='all') data=data.filter(d=>d.cat===reportFilter);
+  if(fromDate) data=data.filter(d=>d.date&&d.date>=fromDate);
+  if(toDate) data=data.filter(d=>d.date&&d.date<=toDate);
+  if(q) data=data.filter(d=>JSON.stringify(d).toLowerCase().includes(q.toLowerCase()));
+  // sort by date
+  data=data.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  return data;
+}
+function renderReport(){
+  const data=getFilteredReportData();
+  const list=document.getElementById('report-list');
+  if(!data.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">No bills found</div></div>';document.getElementById('report-total-sale').textContent='₹0';document.getElementById('report-total-profit').textContent='₹0';return;}
+  let ts=0,tp=0;
+  list.innerHTML=data.map(d=>{
+    const sale=(d.salePrice||0)*(d.qty||0);
+    const profit=sale-((d.costRate||0)*(d.qty||0));
+    ts+=sale; tp+=profit;
+    return`<div class="list-item">
+      <div class="list-item-header"><div class="list-item-title">${d.name}</div><span class="list-item-badge ${cats[d.cat]?.color||'badge-green'}">${d.cat}</span></div>
+      <div class="list-item-grid">
+        <div class="list-item-field">Date: <span>${d.date||'—'}</span></div>
+        <div class="list-item-field">Customer: <span>${d.customer||'—'}</span></div>
+        <div class="list-item-field">Qty: <span>${d.qty}</span></div>
+        <div class="list-item-field">Sale Price: <span>₹${d.salePrice}</span></div>
+        <div class="list-item-field">Total Sale: <span>₹${sale.toLocaleString('en-IN')}</span></div>
+        <div class="list-item-field">Seller: <span>${d.seller||'—'}</span></div>
+        <div class="list-item-field">Profit: <span style="color:var(--green)">₹${profit.toLocaleString('en-IN')}</span></div>
+      </div>
+      <div class="list-actions">
+        <button class="action-btn view" onclick="viewBill('${d._id}')">View Bill</button>
+        <button class="action-btn edit" onclick="openEditBill('${d._id}')">Edit</button>
+        <button class="action-btn del" onclick="askDelete('bill','${d._id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('report-total-sale').textContent='₹'+ts.toLocaleString('en-IN');
+  document.getElementById('report-total-profit').textContent='₹'+tp.toLocaleString('en-IN');
+}
+
+function generateStatement(){
+  const data=getFilteredReportData();
+  const s=window._data.settings;
+  const fromDate=(document.getElementById('report-from-date')||{}).value||'';
+  const toDate=(document.getElementById('report-to-date')||{}).value||'';
+  const catLabel=reportFilter==='all'?'All Categories':(cats[reportFilter]?.label||reportFilter);
+
+  if(!data.length){showToast('Koi data nahi is range mein!','error');return;}
+
+  let ts=0,tp=0;
+  let rows='';
+  let sr=1;
+  data.forEach(d=>{
+    const sale=(d.salePrice||0)*(d.qty||0);
+    const profit=sale-((d.costRate||0)*(d.qty||0));
+    ts+=sale; tp+=profit;
+    rows+=`<tr>
+      <td style="text-align:center">${sr++}</td>
+      <td style="text-align:center">${d.date||'—'}</td>
+      <td style="text-align:center">${d.name}</td>
+      <td style="text-align:center">${d.customer||'N/A'}</td>
+      <td style="text-align:center">${d.qty}</td>
+      <td style="text-align:center">₹${d.costRate||0}</td>
+      <td style="text-align:center">₹${d.salePrice}</td>
+      <td style="text-align:center">₹${sale.toLocaleString('en-IN')}</td>
+      <td style="text-align:center" class="profit">₹${profit.toLocaleString('en-IN')}</td>
+      <td style="text-align:center">${d.seller||'—'}</td>
+    </tr>`;
+  });
+
+  const periodText = fromDate&&toDate ? `${fromDate} to ${toDate}` : fromDate ? `From ${fromDate}` : toDate ? `Until ${toDate}` : 'All Time';
+
+  const html=`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Statement - ${s.shopName}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; font-size: 12px; background: white; color: #111; padding: 20px; }
+  .header { text-align: center; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 16px; }
+  .shop-name { font-size: 20px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+  .shop-info { font-size: 11px; color: #444; margin-top: 4px; }
+  .statement-title { font-size: 15px; font-weight: bold; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .period { font-size: 11px; color: #555; }
+  .summary-box { display: flex; gap: 20px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 12px 16px; margin-bottom: 16px; }
+  .summary-item { flex: 1; }
+  .summary-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+  .summary-value { font-size: 18px; font-weight: bold; margin-top: 2px; }
+  .summary-value.sale { color: #0a5c42; }
+  .summary-value.profit { color: #166534; }
+  .summary-value.count { color: #1e40af; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+  th { background: #1a2332; color: white; padding: 8px 4px; text-align: center; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; border: 1px solid #2d3748; }
+  td { padding: 6px 4px; border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; vertical-align: middle; word-break: break-word; text-align: center; }
+  td:first-child { border-left: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f7fafc; }
+  .profit { color: #166534; font-weight: 600; }
+  .footer { margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px; display: flex; justify-content: space-between; font-size: 10px; color: #888; }
+  .total-row td { font-weight: bold; background: #f0f7f4 !important; border-top: 2px solid #0a5c42; font-size: 12px; }
+  @media print {
+    body { padding: 10px; }
+    @page { margin: 10mm; }
+    button { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="shop-name">${s.shopName}</div>
+  <div class="shop-info">${s.address} &nbsp;|&nbsp; Ph: ${s.phone}</div>
+</div>
+<div class="statement-title">Sales Statement</div>
+<div class="period">Period: ${periodText} &nbsp;|&nbsp; Category: ${catLabel}</div>
+<br>
+<div class="summary-box">
+  <div class="summary-item">
+    <div class="summary-label">Total Sale</div>
+    <div class="summary-value sale">₹${ts.toLocaleString('en-IN')}</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Total Profit</div>
+    <div class="summary-value profit">₹${tp.toLocaleString('en-IN')}</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">Total Bills</div>
+    <div class="summary-value count">${data.length}</div>
+  </div>
+</div>
+<table>
+  <thead><tr>
+    <th style="text-align:center;width:25px">#</th>
+    <th style="text-align:center;width:75px">Date</th>
+    <th style="text-align:center;width:100px">Item</th>
+    <th style="text-align:center;width:65px">Customer</th>
+    <th style="text-align:center;width:30px">Qty</th>
+    <th style="text-align:center;width:45px">Cost</th>
+    <th style="text-align:center;width:45px">Sale</th>
+    <th style="text-align:center;width:55px">Total</th>
+    <th style="text-align:center;width:55px">Profit</th>
+    <th style="text-align:center;width:50px">Seller</th>
+  </tr></thead>
+  <tbody>
+    ${rows}
+    <tr class="total-row">
+      <td colspan="7" style="text-align:center;font-weight:bold;">GRAND TOTAL</td>
+      <td style="text-align:center;">₹${ts.toLocaleString('en-IN')}</td>
+      <td style="text-align:center;" class="profit">₹${tp.toLocaleString('en-IN')}</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<div class="footer">
+  <span>Generated: ${new Date().toLocaleString('en-IN')}</span>
+  <span>${s.shopName}</span>
+</div>
+<br>
+<button onclick="window.print()" style="padding:10px 24px;background:#0a5c42;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;margin-right:8px;">🖨 Print / Save PDF</button>
+<button onclick="window.close()" style="padding:10px 24px;background:#eee;color:#333;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Close</button>
+
+</body>
+</html>`;
+
+  // Try share first, then download as HTML file
+  // Download as HTML file
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Statement_'+periodText.replace(/ /g,'_')+'.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Statement downloaded!','success');
+  // Also try share
+  if(navigator.share){
+    navigator.share({title:'Sales Statement', text:'Statement downloaded!'}).catch(()=>{});
+  }
+}
+
+// ── THERMAL BILL ──
+let currentBillForPrint=null;
+function viewBill(id){ const b=window._data.bills.find(d=>d._id===id); if(b) showBillModal(b); }
+function showBillModal(b){
+  currentBillForPrint=b;
+  const s=window._data.settings;
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'width:100%;height:320px;border:none;border-radius:8px;';
+  const tc = document.getElementById('thermal-content');
+  tc.innerHTML = '';
+  tc.appendChild(iframe);
+  iframe.contentDocument.open();
+  iframe.contentDocument.write(getBillHTML(b, false));
+  iframe.contentDocument.close();
+  document.getElementById('bill-modal').classList.add('open');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function getBillHTML(b, forPrint=false){
+  const s = window._data.settings;
+  const total = (b.salePrice||0)*(b.qty||0);
+  const w = forPrint ? '72mm' : '100%';
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Bill</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Courier New',monospace; font-size:12px; color:#000; background:#fff; width:${w}; margin:0 auto; padding:4px; }
+  .tc { text-align:center; }
+  .tb { font-weight:bold; }
+  .tl { border-top:1px dashed #555; margin:5px 0; }
+  .tr { display:flex; justify-content:space-between; margin:2px 0; line-height:1.5; }
+  .shop { font-size:14px; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; }
+  .info { font-size:10px; color:#333; margin-top:2px; }
+  .item-name { font-size:12px; font-weight:bold; }
+  .total-row { font-size:14px; font-weight:bold; }
+  @media print {
+    @page { size: 80mm auto; margin:2mm; }
+    body { width:76mm; }
+  }
+</style>
+</head>
+<body>
+<div class="tc shop">${s.billName}</div>
+<div class="tc info">${s.billAddress}</div>
+<div class="tc info">Ph: ${s.billPhone}</div>
+<div class="tl"></div>
+<div class="tr"><span>Date :</span><span>${b.date||'—'}</span></div>
+${b.customer?`<div class="tr"><span>Customer:</span><span>${b.customer}</span></div>`:''}
+${b.customerPhone?`<div class="tr"><span>Phone :</span><span>${b.customerPhone}</span></div>`:''}
+<div class="tr"><span>Seller :</span><span>${b.seller||'—'}</span></div>
+<div class="tl"></div>
+<div class="tr tb"><span>ITEM</span><span>AMOUNT</span></div>
+<div class="tl"></div>
+<div class="item-name">${b.name}</div>
+<div class="tr"><span>${b.qty} pcs x Rs.${b.salePrice}</span><span>Rs.${total.toLocaleString('en-IN')}</span></div>
+${b.notes?`<div style="font-size:10px;margin-top:3px;">Note: ${b.notes}</div>`:''}
+<div class="tl"></div>
+<div class="tr total-row"><span>TOTAL</span><span>Rs.${total.toLocaleString('en-IN')}</span></div>
+<div class="tl"></div>
+<div class="tc info" style="margin-top:4px;">Thank you! Visit again.</div>
+
+</body>
+</html>`;
+}
+
+function printBill(){
+  const b = currentBillForPrint;
+  if(!b) return;
+  const txt = getBillText(b);
+  if(navigator.share){
+    navigator.share({title:'Bill - '+b.name, text:txt}).catch(()=>{});
+    return;
+  }
+  // Fallback - copy to clipboard
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(txt);
+    showToast('Bill copied! Paste anywhere to print.','success');
+  }
+}
+
+function getBillText(b){
+  const s = window._data.settings;
+  const total = (b.salePrice||0)*(b.qty||0);
+  return s.billName+'\n'+s.billAddress+'\nPh: '+s.billPhone+
+    '\n================================'+
+    '\nDate    : '+(b.date||'—')+
+    (b.customer?'\nCustomer: '+b.customer:'')+
+    (b.customerPhone?'\nPhone   : '+b.customerPhone:'')+
+    '\nSeller  : '+(b.seller||'—')+
+    '\n================================'+
+    '\nItem    : '+b.name+
+    '\n'+b.qty+' pcs x Rs.'+b.salePrice+
+    '\n================================'+
+    '\nTOTAL   : Rs.'+total.toLocaleString('en-IN')+
+    '\n================================'+
+    '\nThank you! Visit again.';
+}
+
+function downloadBill(){
+  const b = currentBillForPrint;
+  if(!b) return;
+  const txt = getBillText(b);
+  const blob = new Blob([txt], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Bill_'+(b.customer||b.name||'bill')+'_'+(b.date||'')+'.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Bill saved!', 'success');
+}
+
+function shareBill(){
+  const b = currentBillForPrint;
+  if(!b) return;
+  const txt = getBillText(b);
+  if(navigator.share) navigator.share({title:'Bill', text:txt}).catch(()=>{});
+  else if(navigator.clipboard){ navigator.clipboard.writeText(txt); showToast('Bill copied!','success'); }
+}
+
+// ── EXPENSES ──
+async function doSaveExpense(){
+  const date=document.getElementById('exp-date').value;
+  const purpose=document.getElementById('exp-purpose').value;
+  const cost=parseFloat(document.getElementById('exp-cost').value)||0;
+  const payer=document.getElementById('exp-payer').value;
+  const notes=document.getElementById('exp-notes').value;
+  if(!purpose||!cost){showToast('Purpose and Cost required!','error');return;}
+  const id=Date.now().toString();
+  const ok=await window._db.addDoc2('expenses',id,{date,purpose,cost,payer,notes});
+  if(ok){showToast('Expense saved!','success');['exp-purpose','exp-cost','exp-payer','exp-notes'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});renderExpenses();}
+}
+function renderExpenses(){
+  const q=(document.getElementById('exp-search')||{}).value||'';
+  let data=window._data.expenses;
+  if(q) data=data.filter(d=>JSON.stringify(d).toLowerCase().includes(q.toLowerCase()));
+  const list=document.getElementById('exp-list');
+  if(!data.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">💸</div><div class="empty-text">No expenses yet</div></div>';document.getElementById('exp-total').textContent='₹0';return;}
+  let total=0;
+  list.innerHTML=data.map(d=>{total+=parseFloat(d.cost)||0;return`<div class="list-item">
+    <div class="list-item-header"><div class="list-item-title">${d.purpose}</div><div style="font-size:14px;font-weight:600;color:var(--red);">₹${(parseFloat(d.cost)||0).toLocaleString('en-IN')}</div></div>
+    <div class="list-item-grid">
+      <div class="list-item-field">Date: <span>${d.date||'—'}</span></div>
+      <div class="list-item-field">Payer: <span>${d.payer||'—'}</span></div>
+      ${d.notes?`<div class="list-item-field" style="grid-column:span 2">Notes: <span>${d.notes}</span></div>`:''}
+    </div>
+    <div class="list-actions">
+      <button class="action-btn edit" onclick="openEditExpense('${d._id}')">Edit</button>
+      <button class="action-btn del" onclick="askDelete('expense','${d._id}')">Delete</button>
+    </div>
+  </div>`;}).join('');
+  document.getElementById('exp-total').textContent='₹'+total.toLocaleString('en-IN');
+}
+
+// ── ORDERS ──
+async function doSaveOrder(){
+  const name=document.getElementById('ord-name').value;
+  const needs=document.getElementById('ord-needs').value;
+  if(!name||!needs){showToast('Name and Needs required!','error');return;}
+  const id=Date.now().toString();
+  const obj={date:document.getElementById('ord-date').value,name,phone:document.getElementById('ord-phone').value,needs,qty:document.getElementById('ord-qty').value,rate:document.getElementById('ord-rate').value,estimate:document.getElementById('ord-estimate').value,delivery:document.getElementById('ord-delivery').value,notes:document.getElementById('ord-notes').value};
+  const ok=await window._db.addDoc2('orders',id,obj);
+  if(ok){showToast('Order saved!','success');['ord-name','ord-phone','ord-needs','ord-qty','ord-rate','ord-estimate','ord-delivery','ord-notes'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});renderOrders();}
+}
+function renderOrders(){
+  const q=(document.getElementById('ord-search')||{}).value||'';
+  let data=window._data.orders;
+  if(q) data=data.filter(d=>JSON.stringify(d).toLowerCase().includes(q.toLowerCase()));
+  const list=document.getElementById('ord-list');
+  if(!data.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No orders yet</div></div>';return;}
+  list.innerHTML=data.map(d=>`<div class="list-item">
+    <div class="list-item-header"><div class="list-item-title">${d.name}</div><span class="list-item-badge badge-blue">${d.phone||'—'}</span></div>
+    <div class="list-item-grid">
+      <div class="list-item-field">Needs: <span>${d.needs||'—'}</span></div>
+      <div class="list-item-field">Qty: <span>${d.qty||'—'}</span></div>
+      <div class="list-item-field">Rate: <span>₹${d.rate||0}</span></div>
+      <div class="list-item-field">Estimate: <span>₹${d.estimate||0}</span></div>
+      <div class="list-item-field">Order: <span>${d.date||'—'}</span></div>
+      <div class="list-item-field">Delivery: <span>${d.delivery||'—'}</span></div>
+      ${d.notes?`<div class="list-item-field" style="grid-column:span 2">Notes: <span>${d.notes}</span></div>`:''}
+    </div>
+    <div class="list-actions">
+      <button class="action-btn edit" onclick="openEditOrder('${d._id}')">Edit</button>
+      <button class="action-btn del" onclick="askDelete('order','${d._id}')">Delete</button>
+    </div>
+  </div>`).join('');
+}
+
+// ── DELETE ──
+let pendingDel=null;
+function askDelete(type,id){
+  pendingDel={type,id};
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirm(){ document.getElementById('confirm-modal').classList.remove('open'); pendingDel=null; }
+async function confirmDelete(){
+  if(!pendingDel) return;
+  const {type,id}=pendingDel;
+  closeConfirm();
+  if(type==='stock'){
+    await window._db.delDoc('stock',id); renderViewStock();
+  } else if(type==='bill'){
+    // restore stock qty
+    const b=window._data.bills.find(d=>d._id===id);
+    if(b&&b.stockId){
+      const si=window._data.stock.find(d=>d._id===b.stockId);
+      if(si) await window._db.updDoc('stock',b.stockId,{quantity:(parseFloat(si.quantity)||0)+(parseFloat(b.qty)||0)});
+    }
+    await window._db.delDoc('bills',id); renderReport();
+  } else if(type==='expense'){
+    await window._db.delDoc('expenses',id); renderExpenses();
+  } else if(type==='order'){
+    await window._db.delDoc('orders',id); renderOrders();
+  }
+  showToast('Deleted!','success');
+}
+
+// ── EDIT ──
+let editCtx=null;
+function openEditStock(id){
+  const item=window._data.stock.find(d=>d._id===id); if(!item) return;
+  editCtx={type:'stock',id};
+  document.getElementById('edit-modal-title').textContent='Edit Stock';
+  document.getElementById('edit-modal-body').innerHTML=cats[item.cat].fields.map(f=>`
+    <div class="form-row"><label class="form-label">${fLabels[f]}</label>
+    <input class="form-input" id="em-${f}" type="${f==='date'?'date':['rate','quantity'].includes(f)?'number':'text'}" value="${item[f]||''}"></div>`).join('');
+  document.getElementById('edit-modal').classList.add('open');
+}
+function openEditBill(id){
+  const item=window._data.bills.find(d=>d._id===id); if(!item) return;
+  editCtx={type:'bill',id};
+  document.getElementById('edit-modal-title').textContent='Edit Bill';
+  document.getElementById('edit-modal-body').innerHTML=`
+    <div class="form-row"><label class="form-label">Date</label><input class="form-input" id="em-date" type="date" value="${item.date||''}"></div>
+    <div class="form-row"><label class="form-label">Item Name</label><input class="form-input" id="em-name" value="${item.name||''}"></div>
+    <div class="form-row"><label class="form-label">Sale Price (₹)</label><input class="form-input" id="em-salePrice" type="number" value="${item.salePrice||''}"></div>
+    <div class="form-row"><label class="form-label">Quantity</label><input class="form-input" id="em-qty" type="number" value="${item.qty||''}"></div>
+    <div class="form-row"><label class="form-label">Seller</label><input class="form-input" id="em-seller" value="${item.seller||''}"></div>
+    <div class="form-row"><label class="form-label">Notes</label><input class="form-input" id="em-notes" value="${item.notes||''}"></div>`;
+  document.getElementById('edit-modal').classList.add('open');
+}
+function openEditExpense(id){
+  const item=window._data.expenses.find(d=>d._id===id); if(!item) return;
+  editCtx={type:'expense',id};
+  document.getElementById('edit-modal-title').textContent='Edit Expense';
+  document.getElementById('edit-modal-body').innerHTML=`
+    <div class="form-row"><label class="form-label">Date</label><input class="form-input" id="em-date" type="date" value="${item.date||''}"></div>
+    <div class="form-row"><label class="form-label">Purpose</label><input class="form-input" id="em-purpose" value="${item.purpose||''}"></div>
+    <div class="form-row"><label class="form-label">Cost (₹)</label><input class="form-input" id="em-cost" type="number" value="${item.cost||''}"></div>
+    <div class="form-row"><label class="form-label">Payer</label><input class="form-input" id="em-payer" value="${item.payer||''}"></div>
+    <div class="form-row"><label class="form-label">Notes</label><input class="form-input" id="em-notes" value="${item.notes||''}"></div>`;
+  document.getElementById('edit-modal').classList.add('open');
+}
+function openEditOrder(id){
+  const item=window._data.orders.find(d=>d._id===id); if(!item) return;
+  editCtx={type:'order',id};
+  document.getElementById('edit-modal-title').textContent='Edit Order';
+  document.getElementById('edit-modal-body').innerHTML=`
+    <div class="form-grid2">
+      <div class="form-row"><label class="form-label">Date</label><input class="form-input" id="em-date" type="date" value="${item.date||''}"></div>
+      <div class="form-row"><label class="form-label">Name</label><input class="form-input" id="em-name" value="${item.name||''}"></div>
+      <div class="form-row"><label class="form-label">Phone</label><input class="form-input" id="em-phone" value="${item.phone||''}"></div>
+      <div class="form-row"><label class="form-label">Needs</label><input class="form-input" id="em-needs" value="${item.needs||''}"></div>
+      <div class="form-row"><label class="form-label">Qty</label><input class="form-input" id="em-qty" type="number" value="${item.qty||''}"></div>
+      <div class="form-row"><label class="form-label">Rate</label><input class="form-input" id="em-rate" type="number" value="${item.rate||''}"></div>
+      <div class="form-row"><label class="form-label">Estimate</label><input class="form-input" id="em-estimate" type="number" value="${item.estimate||''}"></div>
+      <div class="form-row"><label class="form-label">Delivery</label><input class="form-input" id="em-delivery" type="date" value="${item.delivery||''}"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Notes</label><input class="form-input" id="em-notes" value="${item.notes||''}"></div>`;
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal(){ document.getElementById('edit-modal').classList.remove('open'); editCtx=null; }
+function v(id){ const el=document.getElementById(id); return el?el.value:''; }
+async function doSaveEdit(){
+  if(!editCtx) return;
+  const {type,id}=editCtx;
+  let data={};
+  if(type==='stock'){
+    const item=window._data.stock.find(d=>d._id===id);
+    cats[item.cat].fields.forEach(f=>{ data[f]=v('em-'+f); if(['rate','quantity'].includes(f)) data[f]=parseFloat(data[f])||0; });
+  } else if(type==='bill'){
+    data={date:v('em-date'),name:v('em-name'),salePrice:parseFloat(v('em-salePrice'))||0,qty:parseFloat(v('em-qty'))||0,seller:v('em-seller'),notes:v('em-notes')};
+  } else if(type==='expense'){
+    data={date:v('em-date'),purpose:v('em-purpose'),cost:parseFloat(v('em-cost'))||0,payer:v('em-payer'),notes:v('em-notes')};
+  } else if(type==='order'){
+    data={date:v('em-date'),name:v('em-name'),phone:v('em-phone'),needs:v('em-needs'),qty:v('em-qty'),rate:v('em-rate'),estimate:v('em-estimate'),delivery:v('em-delivery'),notes:v('em-notes')};
+  }
+  const ok=await window._db.updDoc(type==='stock'?'stock':type==='bill'?'bills':type==='expense'?'expenses':'orders',id,data);
+  if(ok){
+    closeEditModal(); showToast('Updated!','success');
+    if(type==='stock') renderViewStock();
+    else if(type==='bill') renderReport();
+    else if(type==='expense') renderExpenses();
+    else renderOrders();
+  }
+}
+
+// ── SETTINGS ──
+function updateSettingsUI(){
+  const s=window._data?window._data.settings:settings;
+  ['shopName','ownerName','address','phone','billName','billAddress','billPhone'].forEach(k=>{
+    const el=document.getElementById('set-'+k); if(el) el.textContent=s[k]||'';
+  });
+  const sn=document.getElementById('header-shop-name'); if(sn) sn.textContent=s.shopName||'';
+  const ow=document.getElementById('header-owner'); if(ow) ow.textContent=s.ownerName||'';
+  const dn=document.getElementById('dash-shop-name'); if(dn) dn.textContent=s.shopName||'';
+  const dw=document.getElementById('dash-owner'); if(dw) dw.textContent=s.ownerName||'';
+  const da=document.getElementById('dash-address'); if(da) da.textContent=s.address||'';
+  updateMpinNames();
+}
+function editSetting(key,label){
+  editCtx={type:'setting',key};
+  document.getElementById('edit-modal-title').textContent='Edit '+label;
+  document.getElementById('edit-modal-body').innerHTML=`<div class="form-row"><label class="form-label">${label}</label><input class="form-input" id="em-setting" value="${(window._data.settings[key])||''}"></div>`;
+  document.getElementById('edit-modal').classList.add('open');
+  // patch doSaveEdit for setting
+}
+function openChangeMpin(){
+  editCtx={type:'mpin'};
+  document.getElementById('edit-modal-title').textContent='Change MPIN';
+  document.getElementById('edit-modal-body').innerHTML=`
+    <div class="form-row"><label class="form-label">Current MPIN</label><input class="form-input" id="em-old" type="password" maxlength="4" placeholder="Current PIN"></div>
+    <div class="form-row"><label class="form-label">New MPIN (4 digits)</label><input class="form-input" id="em-new" type="password" maxlength="4" placeholder="New PIN"></div>
+    <div class="form-row"><label class="form-label">Confirm New MPIN</label><input class="form-input" id="em-conf" type="password" maxlength="4" placeholder="Confirm PIN"></div>`;
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+// override doSaveEdit for settings & mpin
+const _origSaveEdit=doSaveEdit;
+window.doSaveEdit=async function(){
+  if(!editCtx) return;
+  if(editCtx.type==='setting'){
+    const val=document.getElementById('em-setting').value;
+    window._data.setSettings(editCtx.key,val);
+    await window._db.saveSettingsToDb();
+    updateSettingsUI(); closeEditModal(); showToast('Updated!','success'); return;
+  }
+  if(editCtx.type==='mpin'){
+    const old=document.getElementById('em-old').value;
+    const nw=document.getElementById('em-new').value;
+    const conf=document.getElementById('em-conf').value;
+    if(old!==window._data.mpin){showToast('Wrong current MPIN!','error');return;}
+    if(nw.length!==4||isNaN(nw)){showToast('MPIN must be 4 digits!','error');return;}
+    if(nw!==conf){showToast('MPINs do not match!','error');return;}
+    window._data.setMpin(nw);
+    await window._db.saveMpinToDb();
+    closeEditModal(); showToast('MPIN changed!','success'); return;
+  }
+  await _origSaveEdit();
+};
+
+
+// ── MOBILE BACK BUTTON ──
+window.addEventListener('popstate', function(e){
+  if(window._currentScreen !== 'dashboard'){
+    e.preventDefault();
+    goBack();
+    history.pushState(null, '', window.location.href);
+  } else {
+    showExitConfirm();
+  }
+});
+history.pushState(null, '', window.location.href);
+
+// EXIT CONFIRM
+function showExitConfirm(){
+  document.getElementById('exit-confirm').classList.add('open');
+}
+function closeExitConfirm(){
+  document.getElementById('exit-confirm').classList.remove('open');
+  history.pushState(null, '', window.location.href);
+}
+
+// ── TOAST ──
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+(type||'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+
+<!-- EXIT CONFIRM -->
+<div class="confirm-modal" id="exit-confirm">
+  <div class="confirm-box">
+    <div class="confirm-title">App Chhodni Hai?</div>
+    <div class="confirm-text">Kya aap app se bahar jana chahte hain?</div>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeExitConfirm()">Cancel</button>
+      <button class="btn-danger" onclick="window.location.href='about:blank'">Exit</button>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>
